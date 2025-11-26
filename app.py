@@ -1,4 +1,4 @@
-s import streamlit as st
+import streamlit as st
 import pandas as pd
 import pydeck as pdk
 import altair as alt #hate altair but necessary for colour schemes on Streamlit
@@ -282,4 +282,5 @@ with tab2:
             use_container_width=True
 
         )
+
 
