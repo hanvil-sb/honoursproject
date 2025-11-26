@@ -14,7 +14,6 @@ def generate_zone_data(filename, area_name, postcode_sectors, n_households, inco
     
     for i in range(n_households):
         #houshold ID
-        #for example GOV-1001, WES-1001
         prefix = area_name[:3].upper()
         hh_id = f"{prefix}-{1000+i}"
         
@@ -30,69 +29,102 @@ def generate_zone_data(filename, area_name, postcode_sectors, n_households, inco
         lat = location.latitude + np.random.normal(0, 0.002)
         lon = location.longitude + np.random.normal(0, 0.003)
         
+        # --- NEW COLUMNS GENERATION ---
+        
+        # 1. Household Size (1 to 6 people)
+        # Weighted to make 1-4 most common
+        hh_size = np.random.choice([1, 2, 3, 4, 5, 6], p=[0.25, 0.30, 0.20, 0.15, 0.08, 0.02])
+        
+        # 2. Tenure Length (Years)
+        # Using exponential distribution because many people stay short term, fewer stay 20+ years
+        tenure = np.random.exponential(scale=6.0)
+        tenure = round(max(0.1, tenure), 1) # Ensure min is 0.1 years
+        
+        # 3. EPC Rating (Energy Efficiency)
+        # Weighted distribution (C and D are most common in UK)
+        epc_opts = ['A', 'B', 'C', 'D', 'E', 'F', 'G']
+        epc_probs = [0.02, 0.08, 0.35, 0.35, 0.12, 0.06, 0.02]
+        epc = np.random.choice(epc_opts, p=epc_probs)
+        
+        # --- END NEW COLUMNS ---
+
         #generate financial data
-        income = int(np.random.gamma(shape=2.0, scale=income_base/2.0)) #gamma for realistic wealth skew
-        #cap to avoid unrealistic outliers
+        income = int(np.random.gamma(shape=2.0, scale=income_base/2.0)) 
         income = max(8000, min(income, 250000))
         
         #arrears - using income and area to generate risk
         arrears = 0
-        # If random roll is less than the area's risk probability...
-        if np.random.random() < arrears_prob: 
+        
+        # LOGIC UPDATE: We add 'Risk Factors' to the probability
+        # This ensures the new columns actually correlate with debt in your graphs!
+        current_risk_prob = arrears_prob
+        
+        # If EPC is bad (F or G), risk increases (High energy bills)
+        if epc in ['F', 'G']:
+            current_risk_prob += 0.15
+            
+        # If Tenure is very new (< 1 year), risk increases (Moving costs/Deposit)
+        if tenure < 1.0:
+            current_risk_prob += 0.10
+
+        # If random roll is less than the calculated risk probability...
+        if np.random.random() < current_risk_prob: 
             #lower income households tend to have higher/harder debt
+            base_debt = np.random.randint(100, 1000)
+            
             if income < (income_base * 0.8):
-                arrears = np.random.randint(500, 3500)
-            else:
-                arrears = np.random.randint(100, 1000)
+                base_debt = np.random.randint(500, 3500)
+            
+            # Add specific penalties for the new insights
+            if epc in ['F', 'G']:
+                base_debt += np.random.randint(200, 600) # Fuel debt
+            
+            if hh_size > 4 and income < 25000:
+                base_debt += np.random.randint(300, 800) # Overcrowding pressure
+                
+            arrears = base_debt
                 
         #setting target to non-claimants of benefits
         claiming = 'No'
-        #logic for benefit claims - income under 19000 eligible for housing assistance - will go more in-depth later
-        #randomness: setting 40% of them haven't claimed yet (the "vulnerable" group i'm identifying)
         if income < 19000:
             if np.random.random() > 0.4: 
                 claiming = 'Yes'
 
-        #append the data
-        data.append([hh_id, sector, income, arrears, claiming, lat, lon])
+        #append the data (Added the 3 new variables to the end)
+        data.append([hh_id, sector, income, arrears, claiming, lat, lon, hh_size, tenure, epc])
 
-    #save to csv file
-    df = pd.DataFrame(data, columns=['Household_ID', 'Postcode', 'Income', 'Arrears', 'Claiming_Benefits', 'lat', 'lon'])
+    #save to csv file (Added columns to header)
+    df = pd.DataFrame(data, columns=['Household_ID', 'Postcode', 'Income', 'Arrears', 'Claiming_Benefits', 'lat', 'lon', 'Household_Size', 'Tenure_Length_Years', 'EPC_Rating'])
     df.to_csv(filename, index=False)
     print(f"✅ Saved {filename} with {len(df)} records.")
 
-#setting council zones - wanted to create 3 initial csv files that can be used to examine map data and make sure the map works
-#three different council zones with large wage disparity 
-
-# 1. GOVAN (Glasgow) - high deprivation, smaller dataset
-# postcodes: G51 1 (Ibrox/Govan), G51 2 (Pacific Quay), G51 3 (Drumoyne)
+#setting council zones
+# 1. GOVAN (Glasgow)
 generate_zone_data(
     filename="govan_data.csv",
     area_name="Govan",
     postcode_sectors=["G51 1", "G51 2", "G51 3"],
     n_households=500,
-    income_base=21000, #lower average income
-    arrears_prob=0.35  #higher risk of debt
+    income_base=21000, 
+    arrears_prob=0.35 
 )
 
-# 2. LEITH (Edinburgh) - mixed demographics, medium dataset
-# Postcodes: EH6 4 (Newhaven), EH6 6 (Leith Walk) (best place in edinburgh, my birthplace), EH6 7 (Restalrig)
+# 2. LEITH (Edinburgh) 
 generate_zone_data(
     filename="leith_data.csv",
     area_name="Leith",
     postcode_sectors=["EH6 4", "EH6 6", "EH6 7"],
     n_households=650,
-    income_base=32000, #mid-range income
-    arrears_prob=0.20  #moderate risk
+    income_base=32000, 
+    arrears_prob=0.20 
 )
 
-# 3. WESTMINSTER (London) - high income, large dataset
-# Postcodes: SW1V 3 (Pimlico), SW1P 4 (Westminster) (boo), SW1E 6 (Victoria)
+# 3. WESTMINSTER (London)
 generate_zone_data(
     filename="westminster_data.csv",
     area_name="Westminster",
     postcode_sectors=["SW1V 3", "SW1P 4", "SW1E 6"],
     n_households=750,
-    income_base=55000, #high average income
-    arrears_prob=0.10  #lower risk (but debts might be larger value due to adjusted avg income)
+    income_base=55000, 
+    arrears_prob=0.10 
 )
