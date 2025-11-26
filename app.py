@@ -99,7 +99,7 @@ header_col, metric_col1, metric_col2, metric_col3 = st.columns([2, 1, 1, 1])
 
 with header_col:
     st.title("Detecting Struggling Households")
-    st.caption(f"Analyzing household data for council debt & unclaimed support eligibility.")
+    st.caption(f"Analysing household data for council debt & unclaimed support eligibility.")
 
 #spacer because the whitespace and placement was ridiculous
 spacer_html = "<div style='height: 1.5rem;'></div>"
@@ -275,9 +275,10 @@ with tab2:
         st.warning(f"⚠️ **{len(high_risk_df)} Households** identified as High Risk.")
         #download button
         st.download_button(
-            label="📥 Download High Risk Households",
+            label="📥 Export High Risk Households",
             data=high_risk_csv,
             file_name="high_risk_cluster.csv",
             mime="text/csv",
             use_container_width=True
+
         )
