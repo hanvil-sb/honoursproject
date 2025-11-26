@@ -1,4 +1,4 @@
-import streamlit as st
+s import streamlit as st
 import pandas as pd
 import pydeck as pdk
 import altair as alt #hate altair but necessary for colour schemes on Streamlit
@@ -199,8 +199,8 @@ with tab2:
     col_chart, col_stats = st.columns([2, 1]) 
     
     with col_chart:
-        st.subheader("Unsupervised Learning (K-Means)")
-        st.caption("Households grouped by Debt-to-Income Ratio (Financial Burden).")
+        st.subheader("K-Means Clustering")
+        st.caption("Households grouped by Debt-to-Income Ratio to examine their financial burden.")
         
         #custom colours for chart
         #defined colour mapping: high risk = red, moderate = orange, low = green
@@ -282,3 +282,4 @@ with tab2:
             use_container_width=True
 
         )
+
