@@ -175,16 +175,18 @@ with tab1:
         with col_list:
             st.subheader("Priority List")
             
+            #sorts out the priority contact list using the vulnerable cohort variable 
             export_df = vulnerable_cohort.sort_values(by='Rent_Arrears', ascending=False)
             #clean up columns for display
             display_cols = ['Household_ID', 'Rent_Arrears', 'Unclaimed_Gap']
             
+            #container for the list
             st.dataframe(export_df[display_cols], height=350, use_container_width=True)
 
             #download button to download csv of priority outreach list
             csv = export_df.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="📥 Download Priority Outreach List",
+                label="Download Priority Outreach List",
                 data=csv,
                 file_name="priority_outreach_list.csv",
                 mime="text/csv",
@@ -281,7 +283,7 @@ with tab2:
         st.write("") 
         st.warning(f"⚠️ **{len(high_risk_df)} Households** identified as High Risk.")
         st.download_button(
-            label="📥 Download High Risk Households Contact List",
+            label="Download High Risk Households Contact List",
             data=high_risk_csv,
             file_name="high_risk_cluster.csv",
             mime="text/csv",
@@ -344,10 +346,10 @@ with tab3:
         #specific narrative based on what is likely to be top
         #will expand/change as dataset is developed
         if top_factor == 'Savings_Capital':
-            st.markdown("⚠️ **The Savings Trap:** Tenants with low savings buffer are falling into debt immediately when shocks occur.")
+            st.markdown("**The Savings Trap:** Tenants with low savings buffer are falling into debt immediately when shocks occur.")
         elif top_factor == 'Unclaimed_Gap':
-            st.markdown("⚠️ **System Failure:** The strong link between 'Unclaimed Gap' and debt proves that **administrative barriers** to claiming benefits are directly causing rent arrears.")
+            st.markdown("**System Failure:** The strong link between 'Unclaimed Gap' and debt proves that **administrative barriers** to claiming benefits are directly causing rent arrears.")
         elif top_factor == 'Annual_Income':
-            st.markdown("⚠️ **Poverty Driver:** Low income is the primary driver, suggesting a need for employment support rather than just debt management.")
+            st.markdown("**Poverty Driver:** Low income is the primary driver, suggesting a need for employment support rather than just debt management.")
         
         

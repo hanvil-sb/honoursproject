@@ -1,3 +1,6 @@
+#IMPORTANT - initial data generation script completed by me, updated using assistance from copilot 
+#columns made with copilot marked as such
+
 import pandas as pd
 import numpy as np
 import pgeocode
@@ -29,7 +32,7 @@ def generate_zone_data(filename, area_name, postcode_sectors, n_households, inco
         lat = location.latitude + np.random.normal(0, 0.002)
         lon = location.longitude + np.random.normal(0, 0.003)
         
-        # --- NEW COLUMNS GENERATION ---
+        # --- NEW COLUMNS GENERATION --- COPILOT
         
         # 1. Household Size (1 to 6 people)
         # Weighted to make 1-4 most common
@@ -52,22 +55,22 @@ def generate_zone_data(filename, area_name, postcode_sectors, n_households, inco
         income = int(np.random.gamma(shape=2.0, scale=income_base/2.0)) 
         income = max(8000, min(income, 250000))
         
-        #arrears - using income and area to generate risk
+        #arrears variable
         arrears = 0
         
-        # LOGIC UPDATE: We add 'Risk Factors' to the probability
-        # This ensures the new columns actually correlate with debt in your graphs!
+        #adding risk factors to adjust debt levels
+        #further correlation with debt in visualisations with the data
         current_risk_prob = arrears_prob
         
-        # If EPC is bad (F or G), risk increases (High energy bills)
+        #if EPC is bad, greater risk of debt due to higher bills
         if epc in ['F', 'G']:
             current_risk_prob += 0.15
             
-        # If Tenure is very new (< 1 year), risk increases (Moving costs/Deposit)
+        #if statement for if tenure is less than 1 year (accounting for moving & furniture costs, initial deposit etc)
         if tenure < 1.0:
             current_risk_prob += 0.10
 
-        # If random roll is less than the calculated risk probability...
+        #if statement to see if random roll is lower than calculated risk probability, appends base_debt
         if np.random.random() < current_risk_prob: 
             #lower income households tend to have higher/harder debt
             base_debt = np.random.randint(100, 1000)
@@ -75,12 +78,12 @@ def generate_zone_data(filename, area_name, postcode_sectors, n_households, inco
             if income < (income_base * 0.8):
                 base_debt = np.random.randint(500, 3500)
             
-            # Add specific penalties for the new insights
+            #add extra debt factors for further negatives i.e. high fuel costs, large household with a low income 
             if epc in ['F', 'G']:
-                base_debt += np.random.randint(200, 600) # Fuel debt
+                base_debt += np.random.randint(200, 600) #fuel debt
             
             if hh_size > 4 and income < 25000:
-                base_debt += np.random.randint(300, 800) # Overcrowding pressure
+                base_debt += np.random.randint(300, 800) #overcrowding
                 
             arrears = base_debt
                 
@@ -96,7 +99,7 @@ def generate_zone_data(filename, area_name, postcode_sectors, n_households, inco
     #save to csv file (Added columns to header)
     df = pd.DataFrame(data, columns=['Household_ID', 'Postcode', 'Income', 'Arrears', 'Claiming_Benefits', 'lat', 'lon', 'Household_Size', 'Tenure_Length_Years', 'EPC_Rating'])
     df.to_csv(filename, index=False)
-    print(f"✅ Saved {filename} with {len(df)} records.")
+    print(f"Saved {filename} with {len(df)} records.")
 
 #setting council zones
 # 1. GOVAN (Glasgow)
